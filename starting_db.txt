@@ -1,0 +1,72 @@
+atributo: valor
+nome container: --name
+senha root: MYSQL_ROOT_PASSWORD
+tag container (versao): tag
+[opcionais]
+database pra criar: MYSQL_DATABASE
+criar novo usuario com acesso a database acima: MYSQL_USER, MYSQL_PASSWORD
+
+linha padrão
+docker run --name some-mysql -e MYSQL_ROOT_PASSWORD=my-secret-pw -d mysql:tag
+
+linha que usarei pra criar a imagem:
+(substituir senha pela senha que escolheu para a imagem. Ela não existe nesse arquivo e a imagem é deletada logo apos o teste. Isso não é um projeto em produção.)
+
+
+DON'T RECOMMEND DOING THIS ANYWHERE. IT'S A SECURITY FLAW. DON'T EVEN THINK ABOUT DOING IT AT WORK. I'm just doing it to test my database fast.
+export NAME_MYSQL="dbrust" \
+export ROOTPW_MYSQL="something" \
+export DB_MYSQL="funcionarios" \
+export USR_MYSQL="someone" \
+export USRPW_MYSQL="somethingelse"
+WHAT IS ABOVE HERE DIDN'T WORK! Time to stop being lazy and write something directly. I think that the docker image doesn't check this system's environment variables, but instead tries to check the image's.
+
+
+
+docker run --name dbrust -e 'MYSQL_ROOT_PASSWORD=something MYSQL_DATABASE=funcionarios MYSQL_USER=someone MYSQL_PASSWORD=somethingelse' --publish 8666:8080 -d mysql:latest
+
+Below didn't work, Maybe I should try something else
+export NAME_MYSQL="dbrust" \
+export ROOTPW_MYSQL="something" \
+export DB_MYSQL="funcionarios" \
+export USR_MYSQL="someone" \
+export USRPW_MYSQL="somethingelse" 
+
+sudo docker run --name 'dbrust' \
+    -e MYSQL_ROOT_PASSWORD="$NAME_MYSQL" \
+    -e MYSQL_DATABASE="$ROOTPW_MYSQL" \
+    -e MYSQL_USER='$USR_MYSQL' \
+    -e MYSQL_PASSWORD='$USRPW_MYSQL' \
+    --publish '8666:3306' \
+    -d mysql:latest
+
+
+use only this:
+
+sudo docker run --name 'dbrust' \
+    -e MYSQL_ROOT_PASSWORD='something' \
+    -e MYSQL_DATABASE='bd_teste' \
+    -e MYSQL_USER='someone' \
+    -e MYSQL_PASSWORD='somethingelse' \
+    --publish '8666:3306' \
+    -d mysql:latest
+
+https://stackoverflow.com/questions/25865104/field-id-doesnt-have-a-default-value
+try SET GLOBAL sql_mode=''; as root
+
+USE bd_teste;
+
+CREATE TABLE funcionarios(
+    id int AUTO_INCREMENT UNIQUE NOT NULL,
+    idade INT NOT NULL,
+    nome VARCHAR(100) NOT NULL,
+    cargo VARCHAR(50) NOT NULL,
+    PRIMARY KEY(id)
+);
+
+INSERT INTO funcionarios (id, idade, nome, cargo)
+VALUES (0, 10, "potato-san", "potato-sensei");
+
+
+INSERT INTO funcionarios (id, idade, nome, cargo)
+VALUES (0, 10, "potato-chan", "potato-senpai");
