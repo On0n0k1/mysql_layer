@@ -4,7 +4,7 @@ use serde::{Deserialize,Serialize};
 use serde_json::Result as Serde_Result;
 
 
-pub trait Entry<'de>: 'de + Clone + Serialize + Deserialize<'de> {
+pub trait Message<'de>: 'de + Clone + Serialize + Deserialize<'de> {
     fn new_from_json(json: &'de str) -> Option<Self> {
         let funcionario: Serde_Result<Self> = serde_json::from_str(&json[..]);
         match funcionario {

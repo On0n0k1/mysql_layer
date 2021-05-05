@@ -10,15 +10,7 @@ path = "src/lib.rs"
 crate-type = ["lib"]
 
 [[bin]]
-name = "consultar_funcionario"
-doctest = false
-doc = false
-test = false
-bench = false
-required-features = []
-
-[[bin]]
-name = "consultar_funcionarios"
+name = "testing"
 doctest = false
 doc = false
 test = false

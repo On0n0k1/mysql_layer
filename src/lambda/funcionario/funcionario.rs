@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Result;
 
 
+use crate::lambda::message_trait::Message;
+
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Funcionario{
     pub id: u32,
@@ -29,4 +31,7 @@ impl Clone for Funcionario{
         }
     }
 }
+
+impl<'de> Message<'de> for Funcionario{}
+
 

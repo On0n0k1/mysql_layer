@@ -1,5 +1,5 @@
 pub mod db;
-mod lambda;
+pub mod lambda;
 pub mod cli;
 pub mod requests;
 
