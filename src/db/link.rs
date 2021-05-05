@@ -1,8 +1,13 @@
+use std::env;
+use std::result;
+
+use dotenv::from_path;
+
 use mysql::*;
 use mysql::prelude::*;
 
 
-// this is just a temporary struct for testing
+// Holds data for connecting with the database. Each attribute is private.
 pub struct DBInfo{
     db_root_pw: String,
     user_name: String,
@@ -12,7 +17,10 @@ pub struct DBInfo{
 }
 
 impl DBInfo{
-    pub fn new() -> Self {
+    pub fn new() -> result::Result<DBInfo, dotenv::Error> {
+        Self::get_env_vars()?;
+
+        // This block sets the environment variable names
         let (
             db_root_pw,
             user_name,
@@ -20,20 +28,32 @@ impl DBInfo{
             db_name, 
             address,
         ) = (
-                String::from("something"),
-                String::from("someone"),
-                String::from("somethingelse"),
-                String::from("bd_teste"),
-                String::from("localhost:8666"),
+                String::from("db_root_pw"),
+                String::from("db_local_user"),
+                String::from("db_local_pw"),
+                String::from("db_local_db_name"),
+                String::from("db_address"),
         );
+        
+        // This blocks uses the names to get the environment variable values.
+        // Using them to return the DBInfo struct. The ? means that if an error occurs, return that error.
+        Ok(
+            DBInfo{
+                db_root_pw: dotenv::var(db_root_pw)?,
+                user_name: dotenv::var(user_name)?,
+                user_pw: dotenv::var(user_pw)?,
+                db_name: dotenv::var(db_name)?,
+                address: dotenv::var(address)?,
+            }
+        )
+    }
 
-        DBInfo{
-            db_root_pw,
-            user_name,
-            user_pw,
-            db_name,
-            address,
-        }
+    // Coleta as variaveis de ambiente no diretorio .env
+    fn get_env_vars() -> result::Result<(), dotenv::Error>{
+        let my_path = env::current_dir().unwrap();
+        let my_path = my_path.join("env/.env");
+        // println!("Accessing {}", my_path.to_str().unwrap());
+        dotenv::from_path(my_path.as_path())
     }
 
     // connect to the database

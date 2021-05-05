@@ -70,3 +70,27 @@ VALUES (0, 10, "potato-san", "potato-sensei");
 
 INSERT INTO funcionarios (id, idade, nome, cargo)
 VALUES (0, 10, "potato-chan", "potato-senpai");
+
+
+---------------------------------------
+.env file (keeping a copy here in case I lose it somehow)
+---------------------------------------
+
+# Environment variables for connecting to the database.
+# Not all of these need to be present. The functions that use them will not work without them though.
+
+# mysql address to connect
+export db_address = "localhost:8666"
+
+# root user for things like initial setup (I'm not sure about keeping this one here)
+export db_root_user = "root"
+export db_root_pw = "something"
+
+# local user credentials that will be used for accessing the database
+export db_local_user = "someone"
+export db_local_pw = "somethingelse"
+
+# database name that local user will have access to
+export db_local_db_name = "bd_teste"
+
+---------------------------------------

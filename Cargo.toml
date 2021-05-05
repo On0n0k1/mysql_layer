@@ -4,7 +4,35 @@ version = "0.1.0"
 authors = ["On0n0k1 <stiltztinkerstein@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "lib"
+path = "src/lib.rs"
+crate-type = ["lib"]
+
+[[bin]]
+name = "consultar_funcionario"
+doctest = false
+doc = false
+test = false
+bench = false
+required-features = []
+
+[[bin]]
+name = "consultar_funcionarios"
+doctest = false
+doc = false
+test = false
+bench = false
+required-features = []
+
+# What the dependencies are for:
+# mysql: database implemented for this project
+# serde: used for serializing/deserializing data
+# serde_json: same as above for json
+# dotenv: accessing environment variables
 
 [dependencies]
 mysql = "20.1.0"
+serde = {version = "1.0", features = ["derive"] }
+serde_json = "1.0.64"
+dotenv = "0.15.0"
