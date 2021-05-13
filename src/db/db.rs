@@ -81,14 +81,33 @@ impl DB{
         )
     }
 
-    pub fn select_x_from_y_where_z_map<F, T, U> (tx: &mut Transaction, x: String, y: String, z: String, constructor: F) -> Result<Vec<U>> where 
+    pub fn select_x_from_y_where_z_map<F, T, U> (
+        tx: &mut Transaction, 
+        x: &str, 
+        y: &str, 
+        z: &str, 
+        constructor: F,
+        limit: Option<u8>,
+    ) -> Result<Vec<U>> where 
         T: FromRow,
         F: FnMut(T) -> U,
     {
+        
+        let mut where_z = format!("WHERE {}", z);
+        if let z = "" {
+            where_z = String::from("");
+        }
+
+        let limit: String = match limit{
+            None => {String::from(" LIMIT 100")},
+            Some(limit) => {format!(" LIMIT {}", limit)},
+        };
+
         let result = tx.query_map(
-            format!("SELECT {} FROM {} WHERE {}", x, y, z),
+            format!("SELECT {} FROM {} {} {}", x, y, where_z, limit),
             constructor,
         );
+        
         result
     }
 
@@ -98,9 +117,15 @@ impl DB{
         )
     }
 
-    pub fn delete_from_x_where_y(tx: &mut Transaction, x: String, y: String) -> Result<()> {
+    pub fn delete_from_x_where_y(tx: &mut Transaction, x: &str, y: &str) -> Result<()> {
+        let mut where_y = format!("WHERE {}", y);
+
+        if let y = "" {
+            where_y = String::from("");
+        }
+        
         tx.query_drop(
-            format!("DELETE FROM {} WHERE ({})", x, y),
+            format!("DELETE FROM {} {}", x, where_y),
         )
     }
 

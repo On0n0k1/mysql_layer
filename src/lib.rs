@@ -8,3 +8,4 @@ pub mod requests;
 //     consultar_funcionarios,
 // };
 
+pub use lambda::funcionario::funcionario::Funcionario;

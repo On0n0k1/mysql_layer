@@ -17,6 +17,14 @@ test = false
 bench = false
 required-features = []
 
+[[bin]]
+name = "get"
+doctest = false
+doc = false
+test = false
+bench = false
+required-features = []
+
 # What the dependencies are for:
 # mysql: database implemented for this project
 # serde: used for serializing/deserializing data

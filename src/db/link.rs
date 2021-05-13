@@ -35,7 +35,7 @@ impl DBInfo{
                 String::from("db_address"),
         );
         
-        // This blocks uses the names to get the environment variable values.
+        // This block uses the names to get the environment variable values.
         // Using them to return the DBInfo struct. The ? means that if an error occurs, return that error.
         Ok(
             DBInfo{

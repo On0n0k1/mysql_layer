@@ -1,4 +1,10 @@
-use std::fmt;
+use std::{
+    fmt,
+    result,
+    env,
+};
+
+use dotenv::from_path;
 
 
 use crate::db::db::DB;
@@ -13,20 +19,21 @@ use mysql::prelude::{
 use crate::db::column::Column;
 
 
-struct Table{
+pub struct Table{
     name: String,
     column: Vec<Column>,
-    db: DB,
+    // db: DB,
 }
 
 
+
 impl Table{
-    pub fn new(name: String, column: Vec<Column>) -> Result<Self> {
-        let db = DB::new();
+    pub fn new_create(name: String, column: Vec<Column>) -> Result<Self> {
+        // let db = DB::new();
         let mut new_table = Table{
             name,
             column,
-            db,
+            // db,
         };
 
         // Tenta criar a tabela no banco de dados. Se houver erro, retorna o erro dropando o objeto.
@@ -35,8 +42,21 @@ impl Table{
         Ok(new_table)
     }
 
+    pub fn new_connect(name: &str, column: Vec<Column>) -> Result<Self> {
+        let new_table = Table{
+            name: String::from(name),
+            column,
+            // db,
+        };
 
-    fn create_table_table_column(&mut self) -> Result<()> {
+        // Tenta criar a tabela no banco de dados. Se houver erro, retorna o erro dropando o objeto.
+        // new_table.create_table_table_column()?;
+
+        Ok(new_table)
+    }
+
+
+    pub fn create_table_table_column(&mut self) -> Result<()> {
         // let x = self.name.clone();
         // let columns = Column::join_full_name(&self.column);
         
@@ -57,15 +77,16 @@ impl Table{
 
         // };
 
+        let mut db = DB::new();
         // create a copy of itself to use in closure
-        let new_self = self.clone();
+        // let new_self = self.clone();
 
         // Executa o query do banco de dados para criar a tabela, se houve erro, retorna o erro.
-        self.db.initiate_transaction(
+        db.initiate_transaction(
             &|tx: &mut Transaction<'_>| -> Result<()> {
-                let new_self = &new_self;
-                let columns = Column::join_full_name(&new_self.column);
-                DB::create_table_x_y(tx, new_self.name.clone(), columns)
+                // let new_self = &new_self;
+                let columns = Column::join_full_name(&self.column);
+                DB::create_table_x_y(tx, self.name.clone(), columns)
             }
         )?;
 
@@ -80,21 +101,35 @@ impl Table{
         if_exists: bool,
     ) -> Result<()> {
 
-        // create a copy of itself to use in closure
-        let new_self = self.clone();
-        self.db.initiate_transaction(
+        let mut db = DB::new();
+        // // create a copy of itself to use in closure
+        // let new_self = self.clone();
+        db.initiate_transaction(
             &|tx: &mut Transaction<'_>| -> Result<()> {
-                DB::drop_table_x(tx, new_self.name.clone(), temporary, if_exists)
+                DB::drop_table_x(tx, self.name.clone(), temporary, if_exists)
             }
         )
     }
 
 
-    pub fn select_x_from_table_where_y_map<F, T, U> (&self, tx: &mut Transaction, x: &Vec<Column>, y: String, constructor: F) -> Result<Vec<U>> where 
+    pub fn select_x_from_table_where_y_map<F, T, U> (&self, tx: &mut Transaction, x: &Vec<Column>, y: &str, constructor: F) -> Result<Vec<U>> where 
         T: FromRow,
         F: FnMut(T) -> U,
     {
-        DB::select_x_from_y_where_z_map(tx, Column::join_single_name(&x), self.name.clone(), y, constructor)
+        DB::select_x_from_y_where_z_map(tx, &Column::join_single_name(&x)[..], &self.name.clone()[..], y, constructor, None)
+    }
+
+    pub fn select_all_from_table<F, T, U> (&mut self, constructor: F) -> Result<Vec<U>> where 
+    T: FromRow,
+    F: FnMut(T) -> U + Copy,
+    {
+        let mut db = DB::new();
+
+        let vec = db.initiate_transaction(&|tx: &mut Transaction<'_>| -> Result<Vec<U>> {
+            DB::select_x_from_y_where_z_map(tx, "*", &self.name.clone()[..], "", constructor, None)
+        })?;
+
+        Ok(vec)
     }
 
 
@@ -103,9 +138,10 @@ impl Table{
     }
 
 
-    pub fn delete_from_table_where_x(&self, tx: &mut Transaction, x: String) -> Result<()> {
-        DB::delete_from_x_where_y(tx, self.name.clone(), x)
+    pub fn delete_from_table_where_x(&self, tx: &mut Transaction, x: &str) -> Result<()> {
+        DB::delete_from_x_where_y(tx, &self.name.clone()[..], x)
     }
+
 }
 
 
@@ -114,7 +150,7 @@ impl Clone for Table{
         Table{
             name: self.name.clone(),
             column: self.column.clone(),
-            db: self.db.clone(),
+            // db: self.db.clone(),
         }
     }
 }
