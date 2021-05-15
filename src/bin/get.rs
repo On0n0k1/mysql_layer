@@ -1,8 +1,7 @@
 use lib::lambda::funcionario::funcionario::Funcionario;
 use lib::lambda::message_trait::Message;
 
-use lib::db::table::Table;
-use lib::db::db::DB;
+use lib::database::db::DB;
 use lib::requests::response::{
     ResponseType,
     Response,
@@ -24,17 +23,15 @@ pub struct Body{
 impl<'de> Message<'de> for Body{}
 
 fn main() {
-    // let vec = Vec::new(["name", "cargo", "something"]);
-    // let vec = Table::new_create()
-
     let mut db = DB::new();
 
     let vec = db.initiate_transaction(&|tx| -> Result<Vec<Funcionario>> {
-            let vec =DB::select_x_from_y_where_z_map(
+            let vec = DB::select_x_from_y_where_z_map(
                 tx,
                 "*",
                 "funcionarios",
-                "",
+                None,
+                None,
                 |(id, idade, nome, cargo)| {
                     Funcionario{
                         id,
@@ -43,7 +40,6 @@ fn main() {
                         cargo,
                     }
                 },
-                None,
             )?;
             Ok(vec)
         

@@ -1,5 +1,5 @@
 use lib::lambda::funcionario::funcionario::Funcionario;
-use lib::lambda::message_trait::Message;
+// use lib::lambda::message_trait::Message;
 
 fn main() {
     // let mut func = Funcionario{

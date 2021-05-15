@@ -17,6 +17,31 @@ pub struct DBInfo{
 }
 
 impl DBInfo{
+    pub fn get_db_root_pw(&self) -> String {
+        let db_root_pw = self.db_root_pw.clone();
+        db_root_pw
+    }
+
+    pub fn get_user_name(&self) -> String {
+        let user_name = self.user_name.clone();
+        user_name
+    }
+
+    pub fn get_user_pw(&self) -> String {
+        let user_pw = self.user_pw.clone();
+        user_pw
+    }
+
+    pub fn get_db_name(&self) -> String {
+        let db_name = self.db_name.clone();
+        db_name
+    }
+
+    pub fn get_address(&self) -> String {
+        let address = self.address.clone();
+        address
+    }
+
     pub fn new() -> result::Result<DBInfo, dotenv::Error> {
         Self::get_env_vars()?;
 

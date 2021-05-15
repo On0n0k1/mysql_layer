@@ -2,14 +2,22 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Result;
 
+use mysql::*;
+use mysql::prelude::{
+    Queryable,
+    FromRow,
+    FromValue,
+};
 
 use crate::lambda::{
     message_trait::Message,
-    // lambda::Lambda,
 };
-// use crate::requests::request::{
-//     Requests,
-// };
+
+use crate::database::db::DB;
+use crate::database::dao::{
+    DAO,
+    DaoTrait,
+};
 
 use crate::requests::response::{
     ResponseType,
@@ -27,23 +35,22 @@ pub struct Funcionario{
     pub cargo: String,
 }
 
-// Essa trait que eu criei usa as caracteristicas de Serialize e Deserialize para
-// disponibilizar funções mais simples de conversão de json.
-impl<'de> Message<'de> for Funcionario{}
-
-// Essa trait lambda recebe o parametro Requests e distribui o tipo de request para a função associada.
-// impl Lambda for Funcionario{
-//     fn get_implemented_requests() -> Requests {
-//         Requests {
-//             delete: None,
-//             get: Some(Self::get),
-//             post: None,
-//             put: None,
-//         }
-//     }
-// }
-
 impl Funcionario{
+    pub fn new(
+        id: u32,
+        idade: u32,
+        nome: String,
+        cargo: String,
+    ) -> Funcionario
+    {
+        Funcionario {
+            id,
+            idade,
+            nome,
+            cargo,
+        }
+    }
+
     // fn get() -> Get {
     //     let func = Funcionario{
     //         id: 0,
@@ -63,6 +70,109 @@ impl Funcionario{
 
         Response::new(ResponseType::Ok200, func)
     }
+
+    
 }
+
+// Essa trait que eu criei usa as caracteristicas de Serialize e Deserialize para
+// disponibilizar funções mais simples de conversão de json.
+impl<'de> Message<'de> for Funcionario{}
+
+// Essa trait lambda recebe o parametro Requests e distribui o tipo de request para a função associada.
+// impl Lambda for Funcionario{
+//     fn get_implemented_requests() -> Requests {
+//         Requests {
+//             delete: None,
+//             get: Some(Self::get),
+//             post: None,
+//             put: None,
+//         }
+//     }
+// }
+
+impl DaoTrait for Funcionario{
+    type Item = (u32, u32, String, String);
+
+    // db_name = None makes use default name from .env
+    fn get_db_name() -> Option<String> {
+        let db = DB::new();
+        Some(db.link.get_db_name())
+    }
+
+    fn get_table_name() -> String {
+        String::from("funcionario")
+    }
+
+    fn get_columns() -> Vec<String> {
+        vec![
+            String::from("id"),
+            String::from("idade"),
+            String::from("nome"),
+            String::from("cargo"),
+        ]
+    }
+
+    fn get_columns_values(&self) -> Vec<(String, String)> {
+        let id = self.id.clone();
+        let idade = self.idade.clone();
+        let nome = self.nome.clone();
+        let cargo = self.nome.clone();
+        
+        vec![
+            (String::from("id"), format!("{}", id)),
+            (String::from("idade"), format!("{}", idade)),
+            (String::from("nome"), format!("\'{}\'", nome)),
+            (String::from("cargo"), format!("\'{}\'", cargo)),
+        ]
+    }
+
+    fn get_id(&self) -> u32 {
+        self.id.clone()
+    }
+
+    fn set_id(&mut self, id: u32) {
+        self.id = id;
+    }
+
+    // Column order from get_columns_values must be the same as the constructor
+    // fn get_constructor<F, T>() -> F where 
+    //     T: FromRow,
+    //     F: FnMut(T) -> Funcionario,
+    // {
+        
+    //     move |(id, idade, nome, cargo)| {
+    //         let id: u32 = id;
+    //         let idade: u32 = idade;
+    //         let nome: String = String::from(nome);
+    //         let cargo: String = String::from(cargo);
+    //         let func = Funcionario{
+    //             id,
+    //             idade,
+    //             nome,
+    //             cargo,
+    //         };
+    //         func
+    //     }
+
+    // }
+
+    // fn get_constructor() -> Box<dyn FnMut(T) -> Self>;
+    fn get_constructor() -> Box<dyn FnMut(Self::Item)-> Self> 
+    {
+        Box::new(
+            |(id, idade, nome, cargo)| -> Funcionario {
+                Funcionario {
+                    id,
+                    idade,
+                    nome,
+                    cargo,
+                }
+            }
+        )
+    }
+
+}
+
+
 
 

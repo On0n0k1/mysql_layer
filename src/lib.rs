@@ -1,4 +1,4 @@
-pub mod db;
+pub mod database;
 pub mod lambda;
 pub mod cli;
 pub mod requests;
