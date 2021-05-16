@@ -103,8 +103,10 @@ impl DB{
             Some(limit) => {format!(" LIMIT {}", limit)},
         };
 
+        let query = format!("SELECT {} FROM {} {} {}", x, y, where_z, limit);
+        println!("Calling Query: {}", query);
         let result = tx.query_map(
-            format!("SELECT {} FROM {} {} {}", x, y, where_z, limit),
+            query,
             constructor,
         );
         
@@ -119,8 +121,10 @@ impl DB{
             z: &str
         ) -> Result<()>
     {
+        let query = format!("INSERT INTO {} ({}) VALUES ({})", x, y, z);
+        println!("Calling Query: {}", query);
         tx.query_drop(
-            format!("INSERT INTO {} ({}) VALUES ({})", x, y, z),
+            query,
         )
     }
 
@@ -136,8 +140,10 @@ impl DB{
             Some(optional) => {format!("WHERE {}", optional)},
         };
 
+        let query = format!("UPDATE {} SET {} {}", x, y, where_z);
+        println!("Calling query {}", format!("UPDATE {} SET {} {}", x, y, where_z));
         tx.query_drop(
-            format!("UPDATE {} SET {} {}", x, y, where_z),
+            query,
         )
     }
 
@@ -153,9 +159,10 @@ impl DB{
             },
             None => String::from("")
         };
-        
+        let query = format!("DELETE FROM {} {}", x, where_y);
+        println!("{}", query);
         tx.query_drop(
-            format!("DELETE FROM {} {}", x, where_y),
+            query,
         )
     }
 }

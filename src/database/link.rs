@@ -1,10 +1,10 @@
 use std::env;
 use std::result;
 
-use dotenv::from_path;
+// use dotenv::from_path;
 
 use mysql::*;
-use mysql::prelude::*;
+// use mysql::prelude::*;
 
 
 // Holds data for connecting with the database. Each attribute is private.

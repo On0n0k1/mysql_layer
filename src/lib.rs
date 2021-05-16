@@ -8,4 +8,5 @@ pub mod requests;
 //     consultar_funcionarios,
 // };
 
-pub use lambda::funcionario::funcionario::Funcionario;
+// pub use lambda::funcionario::funcionario::Funcionario;
+pub use database::dao::DAO;

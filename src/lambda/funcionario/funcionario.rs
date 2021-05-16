@@ -15,8 +15,8 @@ use crate::lambda::{
 
 use crate::database::db::DB;
 use crate::database::dao::{
+    // DaoTrait,
     DAO,
-    DaoTrait,
 };
 
 use crate::requests::response::{
@@ -60,7 +60,7 @@ impl Funcionario{
     //     };
     //     Get::OK(func.into_json())
     // }
-    pub fn get<'de>() -> Response<'de, Funcionario> {
+    pub fn into_response<'de>() -> Response<'de, Funcionario> {
         let func = Funcionario{
             id: 0,
             idade: 20,
@@ -90,7 +90,7 @@ impl<'de> Message<'de> for Funcionario{}
 //     }
 // }
 
-impl DaoTrait for Funcionario{
+impl DAO<Funcionario> for Funcionario{
     type Item = (u32, u32, String, String);
 
     // db_name = None makes use default name from .env
@@ -100,7 +100,7 @@ impl DaoTrait for Funcionario{
     }
 
     fn get_table_name() -> String {
-        String::from("funcionario")
+        String::from("funcionarios")
     }
 
     fn get_columns() -> Vec<String> {
@@ -112,11 +112,11 @@ impl DaoTrait for Funcionario{
         ]
     }
 
-    fn get_columns_values(&self) -> Vec<(String, String)> {
-        let id = self.id.clone();
-        let idade = self.idade.clone();
-        let nome = self.nome.clone();
-        let cargo = self.nome.clone();
+    fn get_columns_values(element: &Funcionario) -> Vec<(String, String)> {
+        let id = element.id.clone();
+        let idade = element.idade.clone();
+        let nome = element.nome.clone();
+        let cargo = element.nome.clone();
         
         vec![
             (String::from("id"), format!("{}", id)),
@@ -126,12 +126,12 @@ impl DaoTrait for Funcionario{
         ]
     }
 
-    fn get_id(&self) -> u32 {
-        self.id.clone()
+    fn get_id(element: &Funcionario) -> u32 {
+        element.id.clone()
     }
 
-    fn set_id(&mut self, id: u32) {
-        self.id = id;
+    fn set_id(element: &mut Funcionario, id: u32) {
+        element.id = id;
     }
 
     // Column order from get_columns_values must be the same as the constructor
@@ -172,7 +172,6 @@ impl DaoTrait for Funcionario{
     }
 
 }
-
 
 
 

@@ -7,9 +7,8 @@ use std::{
 
 // Essa library permite serializar e deserializar um struct em uma linha de codigo.
 use serde::{
-    de::DeserializeOwned,
     Deserialize,
-    Serialize,
+    // Serialize,
 };
 // Essa library usa a library acima pra converter o struct para json e o inverso.
 use serde_json::Result as Serde_Result;
