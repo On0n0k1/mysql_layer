@@ -131,12 +131,8 @@ pub trait DAO<D>
     }
 
     /// Get an element with given ID from the database.
-    fn get (
-        id: u32,
-        limit: Option<u32>,
-    ) -> std::result::Result<Option<D>, String>
+    fn get (id: u32,) -> std::result::Result<Option<D>, String>
     {
-
         // let columns = &format_columns(Self::get_columns())?[..];
         let columns = &format_columns(Self::get_columns())?[..];
         let table_name = &Self::get_table_name()[..];
@@ -152,7 +148,7 @@ pub trait DAO<D>
                     columns, 
                     table_name, 
                     Some(&(format!("(id = {})", id)[..])), 
-                    limit, 
+                    Some(1), 
                     Self::get_constructor(),
                 )?;
 
@@ -169,11 +165,18 @@ pub trait DAO<D>
 
     /// Gets all elements (up to limit) from the database, 
     /// parsing all the results, if successful. If limit is None, get everything.
-    fn list(limit: Option<u32>) -> std::result::Result<Vec<D>, String> 
+    fn list(where_z: Option<&str>, limit: Option<u32>) -> std::result::Result<Vec<D>, String> 
     {
 
         let columns = &format_columns(Self::get_columns())?[..];
         let table_name = &Self::get_table_name()[..];
+
+        // For workload reasons, None will always limit itself to 1000. A higher value can still be taken from the message.
+        let limit = match limit{
+            None => Some(1000),
+            Some(value) => Some(value),
+        };
+        
         // let constructor: F = D::get_constructor();
 
         // start transaction
@@ -186,7 +189,7 @@ pub trait DAO<D>
                     tx, 
                     columns, 
                     table_name, 
-                    None, 
+                    where_z, 
                     limit, 
                     Self::get_constructor(),
                 )?;

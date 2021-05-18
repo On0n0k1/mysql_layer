@@ -11,6 +11,10 @@ use mysql::prelude::{
 
 use crate::lambda::{
     message_trait::Message,
+    funcionario::{
+        get::get,
+        add::add,
+    },
 };
 
 use crate::database::db::DB;
@@ -19,10 +23,14 @@ use crate::database::dao::{
     DAO,
 };
 
-use crate::requests::response::{
-    ResponseType,
-    Response,
+use crate::requests::{
+    request::Request,
+    response::{
+        ResponseType,
+        Response,
+    },
 };
+
 
 // Define o tipo de objeto funcionario. As propriedades herdadas pelo derive fazem o seguinte:
 // Clone permite manualmente criar copias do objeto.
@@ -39,15 +47,15 @@ impl Funcionario{
     pub fn new(
         id: u32,
         idade: u32,
-        nome: String,
-        cargo: String,
+        nome: &str,
+        cargo: &str,
     ) -> Funcionario
     {
         Funcionario {
             id,
             idade,
-            nome,
-            cargo,
+            nome: String::from(nome),
+            cargo: String::from(cargo),
         }
     }
 
@@ -60,23 +68,23 @@ impl Funcionario{
     //     };
     //     Get::OK(func.into_json())
     // }
-    pub fn into_response<'de>() -> Response<'de, Funcionario> {
-        let func = Funcionario{
-            id: 0,
-            idade: 20,
-            nome: String::from("nome"),
-            cargo: String::from("cargoo")
-        };
+    // pub fn into_response<'de>() -> Response<'de, Funcionario> {
+    //     let func = Funcionario{
+    //         id: 0,
+    //         idade: 20,
+    //         nome: String::from("nome"),
+    //         cargo: String::from("cargoo")
+    //     };
 
-        Response::new(ResponseType::Ok200, func)
-    }
+    //     Response::new(ResponseType::Ok200, func)
+    // }
 
     
 }
 
 // Essa trait que eu criei usa as caracteristicas de Serialize e Deserialize para
 // disponibilizar funções mais simples de conversão de json.
-impl<'de> Message<'de> for Funcionario{}
+// impl<'de> Message<'de> for Funcionario{}
 
 // Essa trait lambda recebe o parametro Requests e distribui o tipo de request para a função associada.
 // impl Lambda for Funcionario{
@@ -170,8 +178,25 @@ impl DAO<Funcionario> for Funcionario{
             }
         )
     }
-
 }
+
+// impl Request for Funcionario{
+//     fn post<'de, T>(request: &'de str) -> Response<'de, T> where T: Message<'de>{
+//         Response::<'de, T>::new(ResponseType::NotImplemented501, None)
+//     }
+
+//     fn get<'de, T>(request: &'de str) -> Response<'de, T> where T: Message<'de>{
+//         Response::<'de, T>::new(ResponseType::NotImplemented501, None)
+//     }
+
+//     fn delete<'de, T>(request: &'de str) -> Response<'de, T> where T: Message<'de>{
+//         Response::<'de, T>::new(ResponseType::NotImplemented501, None)
+//     }
+
+//     fn put<'de, T>(request: &'de str) -> Response<'de, T> where T: Message<'de>{
+//         Response::<'de, T>::new(ResponseType::NotImplemented501, None)
+//     }
+// }
 
 
 

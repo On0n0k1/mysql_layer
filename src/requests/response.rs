@@ -26,7 +26,9 @@
 /// 
 
 use std::marker::PhantomData;
-use serde::{Deserialize, Serialize};
+use std::fmt;
+
+// use serde::{Deserialize, Serialize};
 use crate::lambda::{
     message_trait::Message,
     // lambda::Lambda,
@@ -179,31 +181,101 @@ impl ResponseType{
         }
     }
 }
+// pub trait ResponseExt<'de, T>{
+//     fn get(&self) -> (u16, Option<String>) where T: Message<'de>;
+// }
+pub trait ResponseExt{
+    fn get(&self) -> (u16, Option<String>);
+}
+
 
 // #[derive(Clone, Serialize, Deserialize)]
-pub struct Response<'de, T> where T: Message<'de>{
+// pub struct Response<'de, T> where T: Message<'de>{
+//     response_code: u16,
+//     body: Option<T>,
+//     // This is required to make the compiler stop worrying about the "unused" lifetime
+//     phantom: PhantomData<&'de T>,
+// }
+
+// #[derive(Clone, Serialize, Deserialize)]
+pub struct Response{
     response_code: u16,
-    body: T,
-    // This is required to make the compiler stop worrying about the "unused" lifetime
-    phantom: PhantomData<&'de T>,
+    body: Option<Message>,
 }
+
 
 // Essa trait que eu criei usa as caracteristicas de Serialize e Deserialize para
 // disponibilizar funções mais simples de conversão de json.
 // impl<'de, T> Message<'de> for Response<T>{}
 
-impl<'de, T> Response<'de, T> where T: Message<'de>{
-    pub fn new(response_type: ResponseType, body: T) -> Self where T: Message<'de>{
+// impl<'de, T> Response<'de, T> where T: Message<'de>{
+//     pub fn new(response_type: ResponseType, body: Option<T>) -> Self where T: Message<'de>{
+//         Response{
+//             response_code: response_type.get(),
+//             body,
+//             phantom: PhantomData,
+//         }
+//     }
+
+//     // pub fn get(&self) -> (u16, Option<String>) where T: Message<'de>{
+//     //     let code = self.response_code;
+//     //     let body = self.body.clone();
+//     //     let body: Option<String> = match body {
+//     //         None => None,
+//     //         Some(value) => Some(value.into_json()),
+//     //     };
+//     //     // let body = self.body.into_json();
+//     //     (code, body)
+//     // }
+// }
+
+impl Response{
+    pub fn new(response_type: ResponseType, body: Option<Message>) -> Self{
         Response{
             response_code: response_type.get(),
             body,
-            phantom: PhantomData,
         }
     }
+}
 
-    pub fn get(&self) -> (u16, String) where T: Message<'de>{
+
+impl fmt::Display for Response {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // let code = self.response_code;
+        // let body = self.body.into_json();
+        let (code, body) = self.get();
+        match body{
+            None => write!(f, "{{\n   code: {},\n}}\n", code),
+            Some(value) => write!(f, "{{\n   code: {},\n   body: {}\n}}\n", code, value),
+        }
+
+        // write!(f, "{{\n   code: {},\n   body: {}\n}}\n", code, body)
+    }
+}
+
+// impl<'de, T> ResponseExt<'de, T> for Response<'de, T> where T: Message<'de>{
+//     fn get(&self) -> (u16, Option<String>) where T: Message<'de>{
+//         let code = self.response_code;
+//         let body = self.body.clone();
+//         let body: Option<String> = match body {
+//             None => None,
+//             Some(value) => Some(value.into_json()),
+//         };
+//         // let body = self.body.into_json();
+//         (code, body)
+//     }
+// }
+
+impl ResponseExt for Response{
+    fn get(&self) -> (u16, Option<String>) {
         let code = self.response_code;
-        let body = self.body.into_json();
+        let body = self.body.clone();
+        let body: Option<String> = match body {
+            None => None,
+            Some(value) => Some(value.get_json()),
+        };
+        // let body = self.body.into_json();
         (code, body)
     }
 }
+

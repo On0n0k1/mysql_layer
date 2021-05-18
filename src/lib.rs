@@ -9,4 +9,12 @@ pub mod requests;
 // };
 
 // pub use lambda::funcionario::funcionario::Funcionario;
-pub use database::dao::DAO;
+// pub use database::dao::DAO;
+
+pub use lambda::funcionario::{
+    add::add,
+    get::get,
+    list::list,
+    remove,
+    update,
+};
