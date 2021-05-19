@@ -7,10 +7,10 @@ use crate::requests::{
     response::{ResponseType, Response, ResponseExt},
 };
 
-use serde::{Deserialize, Serialize};
+// use serde::{Deserialize, Serialize};
 
 use crate::lambda::{
-    message_trait::Message,
+    message::Message,
 };
 
 

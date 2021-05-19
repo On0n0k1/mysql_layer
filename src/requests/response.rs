@@ -25,12 +25,12 @@
 /// CONFLICT(409): Unable to update resource.
 /// 
 
-use std::marker::PhantomData;
+// use std::marker::PhantomData;
 use std::fmt;
 
 // use serde::{Deserialize, Serialize};
 use crate::lambda::{
-    message_trait::Message,
+    message::Message,
     // lambda::Lambda,
 };
 
@@ -181,21 +181,11 @@ impl ResponseType{
         }
     }
 }
-// pub trait ResponseExt<'de, T>{
-//     fn get(&self) -> (u16, Option<String>) where T: Message<'de>;
-// }
+
 pub trait ResponseExt{
     fn get(&self) -> (u16, Option<String>);
 }
 
-
-// #[derive(Clone, Serialize, Deserialize)]
-// pub struct Response<'de, T> where T: Message<'de>{
-//     response_code: u16,
-//     body: Option<T>,
-//     // This is required to make the compiler stop worrying about the "unused" lifetime
-//     phantom: PhantomData<&'de T>,
-// }
 
 // #[derive(Clone, Serialize, Deserialize)]
 pub struct Response{
@@ -245,8 +235,8 @@ impl fmt::Display for Response {
         // let body = self.body.into_json();
         let (code, body) = self.get();
         match body{
-            None => write!(f, "{{\n   code: {},\n}}\n", code),
-            Some(value) => write!(f, "{{\n   code: {},\n   body: {}\n}}\n", code, value),
+            None => write!(f, "{{\n  \"statusCode\": {},\n}}\n", code),
+            Some(value) => write!(f, "{{\n  \"statusCode\": {},\n  \"body\": {}\n}}\n", code, value),
         }
 
         // write!(f, "{{\n   code: {},\n   body: {}\n}}\n", code, body)

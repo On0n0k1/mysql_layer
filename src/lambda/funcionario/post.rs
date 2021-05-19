@@ -1,15 +1,10 @@
-// use serde::{Deserialize, Serialize};
-
-// use mysql::*;
-
 use crate::{
     database::{
         dao::DAO,
-        // db::DB,
     },
     lambda::{
         funcionario::funcionario::Funcionario,
-        message_trait::Message,
+        message::Message,
     },
     requests::response::{
         Response,
@@ -18,23 +13,10 @@ use crate::{
 };
 
 
-// #[derive(Clone, Serialize, Deserialize)]
-// pub struct AddBody{
-//     pub funcionario: Option<Funcionario>,
-// }
-
-
-// impl<'de> Message<'de> for AddBody{}
-
-// #[derive(Clone, Serialize, Deserialize)]
-// pub struct AddRequest{
-//     pub funcionario: Funcionario,
-// }
-
-pub fn add(request: &str) -> Response{
+pub fn request_post(message: Message) -> Response{
     // let func = Funcionario::get(id).unwrap();
 
-    let message = Message::new_json(request);
+    // let message = Message::new_json(request);
 
     // let func = Funcionario::new_from_json(request);
     let func = message.get_value::<Funcionario>();
@@ -44,7 +26,7 @@ pub fn add(request: &str) -> Response{
     };
 
     // I will use func later, in case an error happens. That's why I'm cloning it to the add function.
-    let result = Funcionario::add(func.clone());
+    let result = Funcionario::dao_add(func.clone());
 
     // let body = AddBody{
     //     funcionario: func,
@@ -67,7 +49,7 @@ pub fn add(request: &str) -> Response{
                     String::from(" ((Error converting)) ")
                 },
             };
-            
+
             println!("Got an Error when trying to add Funcionario. \n\nvalue: {}\n\n, Error: {}\n\n", message, err);
             let response = Response::new(
                 ResponseType::InternalServerError500,

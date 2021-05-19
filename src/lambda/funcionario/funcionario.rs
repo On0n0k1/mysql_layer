@@ -1,25 +1,24 @@
-
 use serde::{Deserialize, Serialize};
-use serde_json::Result;
+// use serde_json::Result;
 
-use mysql::*;
-use mysql::prelude::{
-    Queryable,
-    FromRow,
-    FromValue,
-};
+// use mysql::*;
+// use mysql::prelude::{
+//     Queryable,
+//     FromRow,
+//     FromValue,
+// };
 
 use crate::lambda::{
-    message_trait::Message,
+    message::Message,
     funcionario::{
-        get::get,
-        add::add,
+        get::request_get,
+        post::request_post,
+        delete::request_delete,
     },
 };
 
 use crate::database::db::DB;
 use crate::database::dao::{
-    // DaoTrait,
     DAO,
 };
 
@@ -37,11 +36,14 @@ use crate::requests::{
 // Serialize e Deserialize permitem "conversão" e "desconversão" de json.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Funcionario{
+    // defaults to 0 if value not included in message
+    #[serde(default)]
     pub id: u32,
     pub idade: u32,
     pub nome: String,
     pub cargo: String,
 }
+
 
 impl Funcionario{
     pub fn new(
@@ -57,46 +59,9 @@ impl Funcionario{
             nome: String::from(nome),
             cargo: String::from(cargo),
         }
-    }
-
-    // fn get() -> Get {
-    //     let func = Funcionario{
-    //         id: 0,
-    //         idade: 20,
-    //         nome: String::from("nome"),
-    //         cargo: String::from("cargoo")
-    //     };
-    //     Get::OK(func.into_json())
-    // }
-    // pub fn into_response<'de>() -> Response<'de, Funcionario> {
-    //     let func = Funcionario{
-    //         id: 0,
-    //         idade: 20,
-    //         nome: String::from("nome"),
-    //         cargo: String::from("cargoo")
-    //     };
-
-    //     Response::new(ResponseType::Ok200, func)
-    // }
-
-    
+    }  
 }
 
-// Essa trait que eu criei usa as caracteristicas de Serialize e Deserialize para
-// disponibilizar funções mais simples de conversão de json.
-// impl<'de> Message<'de> for Funcionario{}
-
-// Essa trait lambda recebe o parametro Requests e distribui o tipo de request para a função associada.
-// impl Lambda for Funcionario{
-//     fn get_implemented_requests() -> Requests {
-//         Requests {
-//             delete: None,
-//             get: Some(Self::get),
-//             post: None,
-//             put: None,
-//         }
-//     }
-// }
 
 impl DAO<Funcionario> for Funcionario{
     type Item = (u32, u32, String, String);
@@ -124,7 +89,7 @@ impl DAO<Funcionario> for Funcionario{
         let id = element.id.clone();
         let idade = element.idade.clone();
         let nome = element.nome.clone();
-        let cargo = element.nome.clone();
+        let cargo = element.cargo.clone();
         
         vec![
             (String::from("id"), format!("{}", id)),
@@ -141,30 +106,7 @@ impl DAO<Funcionario> for Funcionario{
     fn set_id(element: &mut Funcionario, id: u32) {
         element.id = id;
     }
-
-    // Column order from get_columns_values must be the same as the constructor
-    // fn get_constructor<F, T>() -> F where 
-    //     T: FromRow,
-    //     F: FnMut(T) -> Funcionario,
-    // {
-        
-    //     move |(id, idade, nome, cargo)| {
-    //         let id: u32 = id;
-    //         let idade: u32 = idade;
-    //         let nome: String = String::from(nome);
-    //         let cargo: String = String::from(cargo);
-    //         let func = Funcionario{
-    //             id,
-    //             idade,
-    //             nome,
-    //             cargo,
-    //         };
-    //         func
-    //     }
-
-    // }
-
-    // fn get_constructor() -> Box<dyn FnMut(T) -> Self>;
+    
     fn get_constructor() -> Box<dyn FnMut(Self::Item)-> Self> 
     {
         Box::new(
@@ -180,23 +122,21 @@ impl DAO<Funcionario> for Funcionario{
     }
 }
 
-// impl Request for Funcionario{
-//     fn post<'de, T>(request: &'de str) -> Response<'de, T> where T: Message<'de>{
-//         Response::<'de, T>::new(ResponseType::NotImplemented501, None)
-//     }
+impl Request for Funcionario{
+    fn post(message: Message) -> Response{
+        return request_post(message)
+    }
 
-//     fn get<'de, T>(request: &'de str) -> Response<'de, T> where T: Message<'de>{
-//         Response::<'de, T>::new(ResponseType::NotImplemented501, None)
-//     }
+    fn get(message: Message) -> Response{
+        return request_get(message)
+    }
 
-//     fn delete<'de, T>(request: &'de str) -> Response<'de, T> where T: Message<'de>{
-//         Response::<'de, T>::new(ResponseType::NotImplemented501, None)
-//     }
+    fn delete(message: Message) -> Response {
+        // Response::new(ResponseType::NotImplemented501, None)
+        return request_delete(message)
+    }
 
-//     fn put<'de, T>(request: &'de str) -> Response<'de, T> where T: Message<'de>{
-//         Response::<'de, T>::new(ResponseType::NotImplemented501, None)
-//     }
-// }
-
-
-
+    fn put(_message: Message) -> Response {
+        Response::new(ResponseType::NotImplemented501, None)
+    }
+}

@@ -1,6 +1,6 @@
 // Essa library permite serializar e deserializar um struct em uma linha de codigo.
 use serde::{
-    Deserialize, 
+    // Deserialize, 
     Serialize, 
     de::DeserializeOwned
 };
@@ -18,7 +18,7 @@ impl Message{
     }
 
     pub fn new_value<T>(value: T) -> Result<Self, String> where T: Serialize {
-        let json = serde_json::to_string(&value);
+        let json = serde_json::to_string_pretty(&value);
         match json{
             SerdeResult::Ok(value) => {return Ok(Message{json: value}); },
             SerdeResult::Err(err) => {return Err(format!("Error converting json. Err: {}\n\n", err));},
@@ -26,7 +26,7 @@ impl Message{
     }
 
     pub fn store_json<T>(&mut self, value: T) -> Result<String, String> where T: Serialize {
-        let json = serde_json::to_string(&value);
+        let json = serde_json::to_string_pretty(&value);
         match json{
             SerdeResult::Ok(value) => {
                 self.json = value.clone();

@@ -81,7 +81,7 @@ fn format_columns(columns: Vec<String>) -> std::result::Result<String, String> {
 pub trait DAO<D>
 {
     type Item: FromRow;
-    // db_name = None makes use default name from .env
+    // db_name = None makes use default name from .env. Reminder: I still didn't implement this, for some reason.
     fn get_db_name() -> Option<String>;
     fn get_table_name() -> String;
     fn get_columns() -> Vec<String>;
@@ -94,7 +94,7 @@ pub trait DAO<D>
 
     // Hint: self refers to the object itself. Self refers to the type of the object.
     /// Insert a copy of the element into the database.
-    fn add(mut element: D) -> std::result::Result<(), String> 
+    fn dao_add(mut element: D) -> std::result::Result<(), String> 
     {
         Self::set_id(&mut element, 0);
 
@@ -131,7 +131,7 @@ pub trait DAO<D>
     }
 
     /// Get an element with given ID from the database.
-    fn get (id: u32,) -> std::result::Result<Option<D>, String>
+    fn dao_get (id: u32,) -> std::result::Result<Option<D>, String>
     {
         // let columns = &format_columns(Self::get_columns())?[..];
         let columns = &format_columns(Self::get_columns())?[..];
@@ -165,7 +165,7 @@ pub trait DAO<D>
 
     /// Gets all elements (up to limit) from the database, 
     /// parsing all the results, if successful. If limit is None, get everything.
-    fn list(where_z: Option<&str>, limit: Option<u32>) -> std::result::Result<Vec<D>, String> 
+    fn dao_list(where_z: Option<&str>, limit: Option<u32>) -> std::result::Result<Vec<D>, String> 
     {
 
         let columns = &format_columns(Self::get_columns())?[..];
@@ -205,15 +205,13 @@ pub trait DAO<D>
     }
 
     /// Update an element from the database with the same ID as element.
-    fn update(element: D) -> std::result::Result<(), String> {
+    fn dao_update(element: D) -> std::result::Result<(), String> {
 
         let table_name = &Self::get_table_name()[..];
         // let element_id = element.get_id();
         let element_id = Self::get_id(&element);
         
-        let y = &format_columns_values_update(
-            Self::get_columns_values(&element)
-        )?[..];
+        let y = &format_columns_values_update(Self::get_columns_values(&element))?[..];
 
         // start transaction
         let result = DB::new().initiate_transaction(
@@ -239,9 +237,10 @@ pub trait DAO<D>
     }
 
 
-    fn remove_id (
+    // Why is there limit in these args? Maybe I wanted to leave this open for updating with other types of condition?
+    fn dao_remove_id (
         id: u32,
-        limit: Option<u32>,
+        _limit: Option<u32>,
     ) -> std::result::Result<Option<D>, String>
     {
         let columns = &format_columns(Self::get_columns())?[..];
@@ -258,7 +257,7 @@ pub trait DAO<D>
                     columns, 
                     table_name, 
                     Some(&(format!("(id = {})", id))[..]), 
-                    limit, 
+                    Some(1), 
                     Self::get_constructor(),
                 )?;
 
@@ -292,15 +291,59 @@ pub trait DAO<D>
     }
 
 
-    // Does the same as remove_id, but arg is the object.
-    fn remove_element(
-        element: D,
-        limit: Option<u32>,
-    ) -> std::result::Result<Option<D>, String>
-    {
-        let id = Self::get_id(&element);
-        // let id = element.get_id();
-        Self::remove_id(id, limit)
-    }  
+    // // Does the same as remove_id, but arg is the object.
+    // fn dao_remove_element(
+    //     element: D,
+    //     limit: Option<u32>,
+    // ) -> std::result::Result<Option<D>, String>
+    // {
+    //     let table_name = &Self::get_table_name()[..];
+
+
+    //     let columns = &format_columns(Self::get_columns())?[..];
+    //     // let constructor: F = D::get_constructor();
+
+    //     // start transaction
+    //     let value: Result<Option<D>> = DB::new().initiate_transaction(
+    //         &|tx| -> Result<Option<D>>{
+
+    //             // Attempt to select an element from the database
+    //             let mut vec = DB::select_x_from_y_where_z_map(
+    //                 tx, 
+    //                 columns, 
+    //                 table_name, 
+    //                 Some(&(format!("(id = {})", id))[..]), 
+    //                 None, 
+    //                 Self::get_constructor(),
+    //             )?;
+
+    //             let value = vec.pop();
+    //             // Check if value was found, if value doesn't exist, return Ok(None)
+    //             match value {
+    //                 None => {return Ok(None);},
+    //                 Some(value) => {
+    //                     // If value was found, attempt to delete it. 
+    //                     // Return Ok(Some(value)), Or Err(error_message), if it succeeded or not.
+    //                     match DB::delete_from_x_where_y(
+    //                         tx, 
+    //                         table_name, 
+    //                         Some(&(format!("(id = {})", id))[..]),
+    //                     ){
+    //                         Err(err) => {
+    //                             println!("Found element but unable to remove. Err = {}.", err);
+    //                             return Err(err);
+    //                         },
+    //                         Ok(_) => {return Ok(Some(value))}
+    //                     }
+    //                 }
+    //             }
+    //         },
+    //     );
+
+    //     match value {
+    //         Err(err) => {Err(format!("Internal database Error for get call: {}", err))},
+    //         Ok(val) => {Ok(val)},
+    //     }
+    // }  
 }
 

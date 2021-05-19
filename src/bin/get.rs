@@ -1,8 +1,8 @@
 use lib::{
-    get,
+    request_get,
     lambda::{
         funcionario::get::ListGetRequest,
-        message_trait::Message,
+        message::Message,
     },
 };
 
@@ -12,6 +12,6 @@ fn main() {
     let message = Message::new_value::<ListGetRequest>(request).unwrap();
     // let request = format!("{{\"id\":1}}");
     println!("Sending: \n\n{}\n\n", message.get_json());
-    let response = get(&message.get_json()[..]);
+    let response = request_get(message);
     println!("{}", response);
 }

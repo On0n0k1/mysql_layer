@@ -5,17 +5,16 @@ use mysql::*;
 use crate::{
     database::{
         dao::DAO,
-        // db::DB,
     },
     lambda::{
         funcionario::{
             funcionario::Funcionario,
             list::{
-                list,
+                request_list,
                 ListBody,
             },
         },
-        message_trait::Message,
+        message::Message,
     },
     requests::response::{
         Response,
@@ -36,8 +35,6 @@ pub enum ListGetRequest{
     },
 }
 
-// impl<'de> Message<'de> for ListGetRequest{}
-
 
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -46,8 +43,6 @@ pub enum ListGetBody{
     Get(GetBody),
 }
 
-// impl<'de> Message<'de> for ListGetBody{}
-
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct GetBody{
@@ -55,57 +50,33 @@ pub struct GetBody{
 }
 
 
-// impl<'de> Message<'de> for GetBody{}
-
-
-pub fn get(request: &str) -> Response{
-    let mut message = Message::new_json(&request[..]);
+pub fn request_get(message: Message) -> Response{
     let list_get: Option<ListGetRequest> = message.get_value::<ListGetRequest>();
     let list_get = match list_get{
         None => { return Response::new(ResponseType::BadRequest400, None)},
         Some(value) => {value},
     };
 
-    match list_get{
-        ListGetRequest::List{start, end, limit} => { return list(Some((start, end)), limit)}
+    let response = match list_get{
+        ListGetRequest::List{start, end, limit} => { request_list(Some((start, end)), limit)}
         ListGetRequest::Get{id} => {
-            let func  = Funcionario::get(id).unwrap();
+            let func  = Funcionario::dao_get(id).unwrap();
             match func{
-                None => {
-                    return Response::new(
-                        ResponseType::NotFound404,
-                        None,
-                    );
+                None => { Response::new( ResponseType::NotFound404, None)},
+                Some(value) => {
+                    let body = ListGetBody::Get(GetBody{ funcionario: Some(value) });
+                    let conversion = Message::new_value::<ListGetBody>(body);
+
+                    match conversion {
+                        Err(err) => {
+                            println!("Failed to convert get request: Err: {}\n", err);
+                            Response::new(ResponseType::BadRequest400, None)
+                        },
+                        Ok(value) => { Response::new(ResponseType::Ok200, Some(value))}
+                    }
                 },
-                _ => {},
             }
-            let body = ListGetBody::Get(GetBody{funcionario: func,},);
-            let conversion = message.store_json::<ListGetBody>(body);
-
-            let response = match conversion {
-                Err(err) => {
-                    println!("Failed to convert get request: Err: {}\n", err);
-                    Response::new(
-                        ResponseType::BadRequest400,
-                        None,
-                    )
-                },
-                Ok(_) => {
-                    Response::new(
-                        ResponseType::Ok200,
-                        Some(message),
-                    )
-                }
-            };
-            // if let conversion = Err(err) {
-                
-            // };
-            // let response = Response::new(
-            //     ResponseType::Ok200,
-            //     Some(body),
-            // );
-
-            return response;
         },
-    }
+    };
+    response
 }

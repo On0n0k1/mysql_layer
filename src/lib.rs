@@ -12,9 +12,9 @@ pub mod requests;
 // pub use database::dao::DAO;
 
 pub use lambda::funcionario::{
-    add::add,
-    get::get,
-    list::list,
-    remove,
-    update,
+    post::request_post,
+    get::request_get,
+    list::request_list,
+    delete::request_delete,
+    put,
 };

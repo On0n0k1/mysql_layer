@@ -1,6 +1,6 @@
 pub mod funcionario;
-pub mod add;
+pub mod post;
 pub mod get;
 pub mod list;
-pub mod remove;
-pub mod update;
+pub mod delete;
+pub mod put;
