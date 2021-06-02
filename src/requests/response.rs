@@ -111,7 +111,7 @@ pub enum ResponseType{
 
 // Get the response code associated with the value;.
 impl ResponseType{
-    fn get(&self) -> u16 {
+    fn get(&self) -> u32 {
         match self{
             ResponseType::Continue100 => {100},
             ResponseType::SwitchingProtocols101 => {101},
@@ -183,13 +183,13 @@ impl ResponseType{
 }
 
 pub trait ResponseExt{
-    fn get(&self) -> (u16, Option<String>);
+    fn get(&self) -> (u32, Option<String>);
 }
 
 
 // #[derive(Clone, Serialize, Deserialize)]
 pub struct Response{
-    response_code: u16,
+    response_code: u32,
     body: Option<Message>,
 }
 
@@ -257,7 +257,7 @@ impl fmt::Display for Response {
 // }
 
 impl ResponseExt for Response{
-    fn get(&self) -> (u16, Option<String>) {
+    fn get(&self) -> (u32, Option<String>) {
         let code = self.response_code;
         let body = self.body.clone();
         let body: Option<String> = match body {

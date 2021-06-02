@@ -13,10 +13,16 @@ use crate::{
 };
 
 
-pub fn request_post(message: Message) -> Response{
+pub fn request_post(message: Option<Message>) -> Response{
     // let func = Funcionario::get(id).unwrap();
-
     // let message = Message::new_json(request);
+    let message = match message {
+        None => { 
+            println!("Failed to parse AWS Event");
+            return Response::new(ResponseType::InternalServerError500, None)
+        },
+        Some(value) => {value},
+    };
 
     // let func = Funcionario::new_from_json(request);
     let func = message.get_value::<Funcionario>();

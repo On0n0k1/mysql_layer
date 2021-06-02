@@ -10,9 +10,9 @@ fn main(){
     let request = ListGetRequest::List{start: 0, end: 100, limit: None};
     let message = Message::new_value::<ListGetRequest>(request).unwrap();
 
-    println!("Sending: \n\n{}\n\n", message.get_json());
+    println!("Sending GET : \n\n{}\n\n", message.get_json());
 
-    let response = request_get(message);
+    let response = request_get(Some(message));
     // let response = list(Some((0, 100)), None);
     // let response = list(None, None);
     println!("{}", response);

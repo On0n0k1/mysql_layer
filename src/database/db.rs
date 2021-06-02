@@ -15,10 +15,130 @@ pub struct DB{
 
 impl DB{
     pub fn new() -> Self {
-        let link = DBInfo::new().unwrap();
+        let link = DBInfo::new(true).unwrap();
 
         DB{
             link,
+        }
+    }
+
+    pub fn initial_setup (&mut self) -> std::result::Result<(), String>
+    {
+        let mut conn = match self.link.connect_as_root(){
+            Ok(conn) => conn,
+            Err(err) => {
+                let result = format!("Error connecting as root.");
+                println!("{}. err: {}", result, err);
+                return Err(result);
+            },
+        };
+        
+        let mut tx = match conn.start_transaction(TxOpts::default()) {
+            Ok(tx) => tx,
+            Err(err) => {
+                let result = format!("Error initiating transaction.");
+                println!("{}. err: {}", result, err);
+                return Err(result);
+            },
+        };
+
+        let clos = &|tx: &mut Transaction<'_>| -> Result<()>{
+            let query = "SET SESSION sql_mode=''";
+            println!("Calling: {}", query);
+            tx.query_drop(query)?;
+            
+            let db_name = self.link.db_name.clone();
+            // let db_address_in = self.link.address_in.clone();
+            let user_name = self.link.user_name.clone();
+            let user_pw = self.link.user_pw.clone();
+
+            let query = format!("CREATE DATABASE {} CHARACTER SET utf8", db_name);
+            println!("Calling: {}", query);
+            tx.query_drop(query)?;
+
+            // This is insecure authentication, but I'm in a hurry. Need to change this for production.
+            let query = format!("CREATE USER '{}'@'%' IDENTIFIED WITH mysql_native_password BY '{}'",
+            // let query = format!("CREATE USER '{}'@'{}' IDENTIFIED BY '{}'",
+                user_name,
+                // db_address_in,
+                user_pw,
+            );
+
+            println!("Calling: {}", query);
+            tx.query_drop(query)?;
+
+            // let query = format!("SET old_passwords = 2");
+            // println!("Calling: {}", query);
+            // tx.query_drop(query)?;
+            
+            // let query = format!("SET PASSWORD FOR '{}'@'{}' = PASSWORD('{}')",
+            //     user_name,
+            //     db_address,
+            //     user_pw,
+            // );
+            // println!("Calling: {}", query);
+            // tx.query_drop(query)?;
+
+
+            let query = format!("USE {}", db_name);
+            println!("Calling: {}", query);
+            tx.query_drop(query)?;
+
+            let query = format!("{}\n{}\n{}\n{}\n{}\n{}\n{}\n",
+                "CREATE TABLE funcionarios(",
+                "    id int AUTO_INCREMENT UNIQUE NOT NULL,",
+                "    idade INT NOT NULL,",
+                "    nome VARCHAR(100) NOT NULL,",
+                "    cargo VARCHAR(50) NOT NULL,",
+                "    PRIMARY KEY(id)",
+                ")",
+            );
+
+            println!("Calling: {}", query);
+            tx.query_drop(query)?;
+
+            // GRANT ALL PRIVILEGES ON * . * TO 'newuser'@'localhost';
+            let query = format!("GRANT ALL PRIVILEGES ON {} . {} TO '{}'@'%'",
+                db_name,
+                "funcionarios",
+                user_name,
+                // db_address_in,
+            );
+            println!("Calling: {}", query);
+            tx.query_drop(query)?;
+
+            let query = "FLUSH PRIVILEGES";
+            println!("Calling: {}", query);
+            tx.query_drop(query)?;
+            
+            Ok(())
+        };
+
+        match clos(&mut tx) {
+            Ok(_) => {
+                match tx.commit(){
+                    Err(err) => {
+                        let result = format!("Error commiting transaction.");
+                        println!("{}. err: {}", result, err);
+                        return Err(result);
+                    },
+                    Ok(_) => {return Ok(())}
+                }
+            },
+            Err(err_t) => {
+                match tx.rollback(){
+                    Err(err) => {
+                        let result = format!("Error in transaction and error rolling back.");
+                        println!("{}. err: {}.\n err_t: {}\n", result, err, err_t);
+                        return Err(result);
+                    },
+                    Ok(_) => {
+                        let result = format!("Error in transaction. RollBack successful.");
+                        println!("{} err_t: {}\n", result, err_t);
+                        return Err(result);
+                    }
+                };
+            },
         }
     }
 
@@ -33,6 +153,11 @@ impl DB{
         let mut conn = self.link.connect_as_user()?;
         
         let mut tx = conn.start_transaction(TxOpts::default())?;
+
+        let query = "SET SESSION sql_mode=''";
+        println!("Calling: {}", query);
+        tx.query_drop(query)?;
+        
         match clos(&mut tx) {
             Ok(result) => {
                 tx.commit()?;
@@ -142,9 +267,7 @@ impl DB{
 
         let query = format!("UPDATE {} SET {} {}", x, y, where_z);
         println!("Calling query {}", format!("UPDATE {} SET {} {}", x, y, where_z));
-        tx.query_drop(
-            query,
-        )
+        tx.query_drop(query)
     }
 
     pub fn delete_from_x_where_y(

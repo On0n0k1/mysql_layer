@@ -45,22 +45,89 @@ fn format_columns_values_select(columns_values: Vec<(String, String)>) -> std::r
 
 
 /// Turn a vector of tuples (columns, values) into two Strings for update queries.
-fn format_columns_values_update(columns_values: Vec<(String, String)>) -> std::result::Result<String, String> {
+fn format_columns_values_update(id: &str, columns_values: Vec<(String, String)>) -> std::result::Result<String, String> {
     if columns_values.len() == 0 {
         return Err(format!("Columns_values is empty"));
     }
     let (column, value) = columns_values[0].clone();
-    let mut set_queries = format!("{} = {}", column, value);
+
+    let mut set_queries = {
+        if (&column[..]).eq_ignore_ascii_case(id) {
+            String::from("")
+        } else {
+            format!("{} = {}", column, value)
+        }
+    };
+
+    // if one of the queries is id, ignore it.
+    // let mut set_queries = match &column[..] {
+    //     id => String::from(""),
+    //     _ => format!("{} = {}", column, value),
+    // };
+
+    // let mut set_queries = format!("{} = {}", column, value);
 
     for i in 1..columns_values.len() {
         let (column, value) = columns_values[i].clone();
-        set_queries = format!("{}, {} = {}", set_queries, column, value);
+
+        set_queries = {
+            if (&column[..]).eq_ignore_ascii_case(id) {
+                set_queries
+            } else {
+                if set_queries.len() == 0 {
+                    format!("{} = {}", column, value)
+                } else {
+                    format!("{}, {} = {}", set_queries, column, value)
+                }
+            }
+        }
+
+        // if one of the columns is id, ignore it
+        // set_queries = match &column[..] {
+        //     id => format!("{}", set_queries),
+        //     _ => format!("{}, {} = {}", set_queries, column, value),
+        // };
+
+        // set_queries = format!("{}, {} = {}", set_queries, column, value);
     }
     // set_queries = format!("({})", set_queries);
 
     Ok(set_queries)
 }
 
+// format columns_values in a format to be used for where statements. Ignore id column.
+fn format_columns_values_where_no_id(id: &str, columns_values: Vec<(String, String)>) -> std::result::Result<String, String> {
+    if columns_values.len() == 0 {
+        return Err(format!("Columns_values is empty"));
+    }
+    let (column, value) = columns_values[0].clone();
+
+    let mut set_queries = {
+        if (&column[..]).eq_ignore_ascii_case(id) {
+            String::from("")
+        } else {
+            format!("({} = {})", column, value)
+        }
+    };
+
+    for i in 1..columns_values.len() {
+        let (column, value) = columns_values[i].clone();
+
+        set_queries = {
+            if (column.to_lowercase()) == (id.to_lowercase()) {
+                set_queries
+            } else {
+                if set_queries.len() == 0 {
+                    format!("({} = {})", column, value)
+                } else {
+                    format!("{} AND ({} = {})", set_queries, column, value)
+                }
+            }
+        }
+    }
+
+    Ok(set_queries)
+}
 
 /// Turn a vector of columns into a single string for query operations.
 fn format_columns(columns: Vec<String>) -> std::result::Result<String, String> {
@@ -87,6 +154,7 @@ pub trait DAO<D>
     fn get_columns() -> Vec<String>;
     fn get_columns_values(element: &D) -> Vec<(String, String)>;
     fn get_id(element: &D) -> u32;
+    fn get_id_name() -> String;
     fn set_id(element: &mut D, id: u32);
     // Column order from get_columns_values must be the same as the constructor
     fn get_constructor() -> Box<dyn FnMut(Self::Item) -> D>;
@@ -204,47 +272,76 @@ pub trait DAO<D>
         }
     }
 
+    fn dao_list_value(value: D, limit: Option<u32>) -> std::result::Result<Vec<D>, String> {
+
+        let columns_values = 
+            &format_columns_values_where_no_id(
+                &format!("{}", Self::get_id_name())[..], 
+                Self::get_columns_values(&value)
+            )?[..];
+
+       Self::dao_list(Some(&columns_values[..]), limit)
+    }
+
     /// Update an element from the database with the same ID as element.
-    fn dao_update(element: D) -> std::result::Result<(), String> {
+    fn dao_update(element: D) -> std::result::Result<Option<D>, String> {
 
         let table_name = &Self::get_table_name()[..];
         // let element_id = element.get_id();
         let element_id = Self::get_id(&element);
+        let element_id_name = Self::get_id_name();
+        let columns = &format_columns(Self::get_columns())?[..];
         
-        let y = &format_columns_values_update(Self::get_columns_values(&element))?[..];
+        let y = &format_columns_values_update(&format!("{}", Self::get_id(&element))[..], Self::get_columns_values(&element))?[..];
+        let where_z = format!("({} = {})", element_id_name, element_id);
 
         // start transaction
         let result = DB::new().initiate_transaction(
-            &|tx| -> Result<()> {
-                
-                // The ? at the end means that it returns an error, if it happens
-                DB::update_x_set_y_where_z(
+            &|tx| -> Result<Option<D>> {
+
+                let mut vec = DB::select_x_from_y_where_z_map(
                     tx, 
-                    table_name,
-                    y, 
-                    Some(&(format!("(id = {})", element_id))[..]),
+                    columns, 
+                    table_name, 
+                    Some(&where_z[..]),
+                    Some(1), 
+                    Self::get_constructor(),
                 )?;
 
-                // Reached here with no errors, then Ok.
-                Ok(())
+                let value = vec.pop();
+
+                match value {
+                    None => Ok(None),
+                    Some(found_element) => {
+                        // The ? at the end means that it returns an error, if it happens
+                        DB::update_x_set_y_where_z(
+                            tx, 
+                            table_name,
+                            y, 
+                            Some(&where_z[..]),
+                        )?;
+                        // Reached here with no errors, then Ok.
+                        Ok(Some(found_element))
+                    }
+                }
+
             },
         );
 
         match result {
             Err(err) => {Err(format!("Internal database Error for list call: {}", err))},
-            Ok(_) => {Ok(())},
+            Ok(value) => {Ok(value)},
         }
     }
 
 
-    // Why is there limit in these args? Maybe I wanted to leave this open for updating with other types of condition?
     fn dao_remove_id (
         id: u32,
-        _limit: Option<u32>,
     ) -> std::result::Result<Option<D>, String>
     {
         let columns = &format_columns(Self::get_columns())?[..];
         let table_name = &Self::get_table_name()[..];
+        let id_name = Self::get_id_name();
         // let constructor: F = D::get_constructor();
 
         // start transaction
@@ -256,7 +353,7 @@ pub trait DAO<D>
                     tx, 
                     columns, 
                     table_name, 
-                    Some(&(format!("(id = {})", id))[..]), 
+                    Some(&(format!("({} = {})", id_name, id))[..]), 
                     Some(1), 
                     Self::get_constructor(),
                 )?;
@@ -271,7 +368,7 @@ pub trait DAO<D>
                         match DB::delete_from_x_where_y(
                             tx, 
                             table_name, 
-                            Some(&(format!("(id = {})", id))[..]),
+                            Some(&(format!("({} = {})", id_name, id))[..]),
                         ){
                             Err(err) => {
                                 println!("Found element but unable to remove. Err = {}.", err);
@@ -289,6 +386,8 @@ pub trait DAO<D>
             Ok(val) => {Ok(val)},
         }
     }
+
+     
 
 
     // // Does the same as remove_id, but arg is the object.

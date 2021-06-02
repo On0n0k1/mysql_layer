@@ -65,7 +65,7 @@ CREATE TABLE funcionarios(
 );
 
 INSERT INTO funcionarios (id, idade, nome, cargo)
-VALUES (0, 10, "potato-san", "potato-sensei");
+VALUES (0, 10, "potato-san", "somethignthingy");
 
 
 INSERT INTO funcionarios (id, idade, nome, cargo)
@@ -94,3 +94,5 @@ export db_local_pw = "somethingelse"
 export db_local_db_name = "bd_teste"
 
 ---------------------------------------
+
+

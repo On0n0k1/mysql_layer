@@ -14,6 +14,7 @@ use crate::lambda::{
         get::request_get,
         post::request_post,
         delete::request_delete,
+        put::request_put,
     },
 };
 
@@ -23,9 +24,9 @@ use crate::database::dao::{
 };
 
 use crate::requests::{
-    request::Request,
+    request::Action,
     response::{
-        ResponseType,
+        // ResponseType,
         Response,
     },
 };
@@ -103,6 +104,10 @@ impl DAO<Funcionario> for Funcionario{
         element.id.clone()
     }
 
+    fn get_id_name() -> String {
+        String::from("id")
+    }
+
     fn set_id(element: &mut Funcionario, id: u32) {
         element.id = id;
     }
@@ -122,21 +127,21 @@ impl DAO<Funcionario> for Funcionario{
     }
 }
 
-impl Request for Funcionario{
-    fn post(message: Message) -> Response{
+impl Action for Funcionario{
+    fn post(message: Option<Message>) -> Response{
         return request_post(message)
     }
 
-    fn get(message: Message) -> Response{
+    fn get(message: Option<Message>) -> Response{
         return request_get(message)
     }
 
-    fn delete(message: Message) -> Response {
+    fn delete(message: Option<Message>) -> Response {
         // Response::new(ResponseType::NotImplemented501, None)
         return request_delete(message)
     }
 
-    fn put(_message: Message) -> Response {
-        Response::new(ResponseType::NotImplemented501, None)
+    fn put(message: Option<Message>) -> Response {
+        return request_put(message)
     }
 }

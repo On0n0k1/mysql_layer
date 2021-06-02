@@ -50,7 +50,15 @@ pub struct GetBody{
 }
 
 
-pub fn request_get(message: Message) -> Response{
+pub fn request_get(message: Option<Message>) -> Response{
+    let message = match message {
+        None => { 
+            println!("Failed to parse AWS Event");
+            return Response::new(ResponseType::InternalServerError500, None)
+        },
+        Some(value) => value,
+    };
+
     let list_get: Option<ListGetRequest> = message.get_value::<ListGetRequest>();
     let list_get = match list_get{
         None => { return Response::new(ResponseType::BadRequest400, None)},

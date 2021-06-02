@@ -2,6 +2,7 @@ pub mod database;
 pub mod lambda;
 pub mod cli;
 pub mod requests;
+// pub mod bin;
 
 // pub use lambda::{
 //     consultar_funcionario,
@@ -16,5 +17,5 @@ pub use lambda::funcionario::{
     get::request_get,
     list::request_list,
     delete::request_delete,
-    put,
+    put::request_put,
 };

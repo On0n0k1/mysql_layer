@@ -4,6 +4,36 @@ version = "0.1.0"
 authors = ["On0n0k1 <stiltztinkerstein@gmail.com>"]
 edition = "2018"
 
+[[bin]]
+name = "add"
+test = false
+bench = false
+
+[[bin]]
+name = "delete"
+test = false
+bench = false
+
+[[bin]]
+name = "get"
+test = false
+bench = false
+
+[[bin]]
+name = "db_setup"
+test = false
+bench = false
+
+[[bin]]
+name = "list"
+test = false
+bench = false
+
+[[bin]]
+name = "update"
+test = false
+bench = false
+
 [lib]
 name = "lib"
 path = "src/lib.rs"
@@ -20,3 +50,6 @@ mysql = "20.1.0"
 serde = {version = "1.0", features = ["derive"] }
 serde_json = "1.0.64"
 dotenv = "0.15.0"
+base64 = "0.13.0"
+
+

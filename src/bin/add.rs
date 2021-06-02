@@ -19,7 +19,7 @@ fn main() {
 
     let message = Message::new_value::<Funcionario>(request).unwrap();
     // let request = format!("{{\"id\":1}}");
-    println!("Sending: \n\n{}\n\n", message.get_json());
-    let response = request_post(message);
+    println!("Sending add: \n\n{}\n\n", message.get_json());
+    let response = request_post(Some(message));
     println!("{}", response);
 }
